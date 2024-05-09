@@ -17,11 +17,12 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug');
             $table->decimal('price', 8, 2);
-            $table->string('image_url');
-            $table->string('share_url');
+            $table->text('image_url');
+            $table->text('share_url');
             $table->timestamps();
         });
     }
+
 
     /**
      * Reverse the migrations.

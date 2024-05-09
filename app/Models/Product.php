@@ -9,7 +9,8 @@ class Product extends Model
 {
     use HasFactory;
     // propietats de productes, nom, id, preu, foto, si esta publicat
-    protected $fillable = [
+    protected $fillable =
+    [
         'product_id',
         'name',
         'slug',
@@ -17,6 +18,7 @@ class Product extends Model
         'published',
         'image_url',
         'share_url',
+
     ];
 
     public function category()

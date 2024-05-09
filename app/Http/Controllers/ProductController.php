@@ -5,110 +5,117 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Category;
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Requests\UpdateCategoryRequest;
 use GuzzleHttp\Client;
-use App\Http\Requests\StoreProductRequest;
-use App\Http\Requests\UpdateProductRequest;
 
 class ProductController extends Controller
 {
     /**
-     * Muestra una lista de todos los productos.
+     * Display a listing of the resource.
      */
     public function index()
     {
-        // Lógica para listar todos los productos
+        //
     }
 
     /**
-     * Muestra el formulario para crear un nuevo producto.
+     * Show the form for creating a new resource.
      */
     public function create()
     {
-        // Lógica para mostrar el formulario de creación
+        //
     }
 
     /**
-     * Almacena un nuevo producto en la base de datos.
+     * Store a newly created resource in storage.
      */
-    public function store(StoreProductRequest $request)
+    public function store(StoreCategoryRequest $request)
     {
-        // Lógica para procesar y almacenar un nuevo producto
+        //
     }
 
     /**
-     * Muestra un producto específico.
+     * Display the specified resource.
      */
-    public function show(Product $product)
+    public function show(Product $category)
     {
-        // Lógica para mostrar un producto específico
+        //
     }
 
     /**
-     * Muestra el formulario para editar un producto específico.
+     * Show the form for editing the specified resource.
      */
-    public function edit(Product $product)
+    public function edit(Product $category)
     {
-        // Lógica para mostrar el formulario de edición
+        //
     }
 
     /**
-     * Actualiza un producto específico en la base de datos.
+     * Update the specified resource in storage.
      */
-    public function update(UpdateProductRequest $request, Product $product)
+    public function update(UpdateCategoryRequest $request, Product $category)
     {
-        // Lógica para procesar y actualizar un producto existente
+        //
     }
 
     /**
-     * Elimina un producto específico de la base de datos.
+     * Remove the specified resource from storage.
      */
-    public function destroy(Product $product)
+    public function destroy(Product $category)
     {
-        // Lógica para eliminar un producto
+        //
     }
+
     public function importarProductePerCategoria()
     {
-        // Obtenemos todas las categorías locales
+        // Recibimos las categorias
         $categories = Category::all();
+
         $client = new Client();
-
-        // Iteramos sobre cada categoría local
+        // Recorremos las categorias
         foreach ($categories as $category) {
-            // Realizamos una solicitud HTTP para obtener los datos de la categoría desde la API de Mercadona
-            $response = $client->request('GET', 'https://tienda.mercadona.es/api/categories/' . $category->external_id);
 
+            $response = $client->request('GET', 'https://tienda.mercadona.es/api/categories/' . $category->external_id);
             // Verificamos si la solicitud fue exitosa (código de estado 200)
             if ($response->getStatusCode() == 200) {
-                // Decodificamos los datos obtenidos de la respuesta
+
+                var_dump($category->external_id);
+                // Obtenemos los datos de la respuesta y los decodificamos
                 $data = json_decode($response->getBody()->getContents(), true);
 
-                // Recorremos cada subcategoría dentro de la categoría
-                foreach ($data['categories'] as $subcategory) {
-                    // Recorremos los productos dentro de la subcategoría
-                    foreach ($subcategory['products'] as $product) {
-                        // Verificamos si el producto ya existe
-                        $productExists = Product::where('external_id', $product['id'])->first();
+                // Recorremos los productos de la categoria
+                foreach ($categories as $category) {
+                    $response = $client->request('GET', 'https://tienda.mercadona.es/api/categories/' . $category->external_id);
 
-                        // Si no existe, lo creamos en la base de datos
-                        if (!$productExists) {
-                            Product::create([
-                                'product_id' => $product['id'],
-                                'name' => str_replace(',', ' ', $product['display_name']),
-                                'slug' => $product['slug'],
-                                'price' => $product['price_instructions']['unit_price'],
-                                'image_url' => $product['thumbnail'],
-                                'share_url' => $product['share_url'],
-                            ]);
+                    if ($response->getStatusCode() == 200) {
+                        $data = json_decode($response->getBody()->getContents(), true);
+                        foreach ($data['categories'] as $subcategory) { // Cambio de nombre de la variable aquí
+                            foreach ($subcategory['products'] as $product) {
+                                $productExists = Product::where('product_id', $product['id'])->first();
+
+                                if (!$productExists) {
+                                    Product::create([
+                                        'product_id' => $product['id'],
+                                        'name' => str_replace(',', ' ', $product['display_name']),
+                                        'slug' => $product['slug'],
+                                        'price' => $product['price_instructions']['unit_price'],
+                                        'image_url' => $product['thumbnail'],
+                                        'share_url' => $product['share_url'],
+                                    ]);
+                                }
+                            }
                         }
+                    } else {
+                        return response()->json(['error' => 'Error al obtener las categorías de la API de Mercadona'], 500);
                     }
                 }
+
+                return response()->json(['message' => 'Categorías importadas correctamente']);
             } else {
-                // Si la solicitud falla, devolvemos un mensaje de error
-                return response()->json(['error' => 'Error al obtener las categorías de la API de Mercadona'], 500);
+                // En caso de error en la solicitud, retornamos un mensaje de error
+                return response()->json(['error' => 'Error al obtindre les categories de la API de Mercadona'], 500);
             }
         }
-
-        // Si todas las categorías se procesan correctamente, devolvemos un mensaje de éxito
-        return response()->json(['message' => 'Productos importados correctamente']);
     }
 }

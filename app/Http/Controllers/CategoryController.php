@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
@@ -12,104 +11,100 @@ use GuzzleHttp\Client;
 class CategoryController extends Controller
 {
     /**
-     * Muestra una lista de las categorías disponibles.
+     * Display a listing of the resource.
      */
     public function index()
     {
-        // Lógica para listar todas las categorías
+        //
     }
 
     /**
-     * Muestra el formulario para crear una nueva categoría.
+     * Show the form for creating a new resource.
      */
     public function create()
     {
-        // Lógica para mostrar el formulario de creación
+        //
     }
 
     /**
-     * Almacena una nueva categoría en la base de datos.
+     * Store a newly created resource in storage.
      */
     public function store(StoreCategoryRequest $request)
     {
-        // Lógica para procesar y almacenar una nueva categoría
+        //
     }
 
     /**
-     * Muestra una categoría específica.
+     * Display the specified resource.
      */
     public function show(Category $category)
     {
-        // Lógica para mostrar una categoría en particular
+        //
     }
 
     /**
-     * Muestra el formulario para editar una categoría específica.
+     * Show the form for editing the specified resource.
      */
     public function edit(Category $category)
     {
-        // Lógica para mostrar el formulario de edición
+        //
     }
 
     /**
-     * Actualiza una categoría específica en la base de datos.
+     * Update the specified resource in storage.
      */
     public function update(UpdateCategoryRequest $request, Category $category)
     {
-        // Lógica para procesar y actualizar una categoría existente
+        //
     }
 
     /**
-     * Elimina una categoría específica de la base de datos.
+     * Remove the specified resource from storage.
      */
     public function destroy(Category $category)
     {
-        // Lógica para eliminar una categoría
+        //
     }
 
-    /**
-     * Importa categorías desde una API externa.
-     * Realiza una solicitud HTTP a la API de Mercadona para obtener las categorías.
-     * Luego procesa y guarda las categorías en la base de datos.
-     */
     public function importarCategories()
     {
-        // Crear cliente HTTP
+        // Realizamos la solicitud HTTP a la API de Mercadona
         $client = new Client();
-
-        // Realizar una solicitud HTTP a la API de Mercadona
         $response = $client->request('GET', 'https://tienda.mercadona.es/api/categories/');
 
-        // Verificar si la solicitud fue exitosa
+        // Verificamos si la solicitud fue exitosa (código de estado 200)
         if ($response->getStatusCode() == 200) {
-            // Decodificar datos de la respuesta
+            // Obtenemos los datos de la respuesta y los decodificamos
             $data = json_decode($response->getBody()->getContents(), true);
 
-            // Procesar las categorías y almacenarlas
+            // Procesamos y almacenamos las categorías en la base de datos
             foreach ($data['results'] as $section) {
                 if (isset($section['categories'])) {
-                    // Procesar cada categoría y almacenarla en la base de datos
+
+                    // Recibimos el id y el nombre de la categoría padre
                     foreach ($section['categories'] as $category) {
+
                         $parent_id = $section['id'];
                         $parent_name = $section['name'];
                         var_dump($parent_id);
                         var_dump($parent_name);
-                        // Creamos o actualizamos la categoría
+                        // Creamos o actualizamos la categoría en la base de datos
                         Category::updateOrCreate(
-                            // Buscamos por ID externo
-                            ['external_id' => $category['id']],
+                            ['external_id' => $category['id']], // Buscamos por ID externo
                             [
-                                'name' => $category['name'],
-                                'parent_id' => $parent_id,
-                                'parent_name' => $parent_name
+                                'name' => $category['name'], // Asignamos el nombre de la categoría
+                                'parent_id' => $parent_id, // Asignamos el ID de la categoría padre
+                                'parent_name' => $parent_name // Asignamos el nombre de la categoría padre
                             ]
                         );
                     }
                 }
             }
+
+            return response()->json(['message' => 'Categories importades correctament']);
         } else {
-            // Devolver un mensaje de error si la solicitud falla
-            return response()->json(['error' => 'Error al obtener las categorías de la API de Mercadona'], 500);
+            // En caso de error en la solicitud, retornamos un mensaje de error
+            return response()->json(['error' => 'Error al obtindre les categories de la API de Mercadona'], 500);
         }
     }
 }
